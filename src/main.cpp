@@ -23,6 +23,11 @@ MatrixXd uAfine(MatrixXd &xx);
 MatrixXd triD(MatrixXd &xx, MatrixXd &yy, MatrixXd &t1, MatrixXd &t2);
 void nacrtaj_malu( MatrixXd &rekonstruisane_400);
 void nacrtaj_veliku( MatrixXd &rekonstruisane_400);
+
+Eigen::Vector3d nevidljive_proizvod( Eigen::Vector3d & a, Eigen::Vector3d & b, Eigen::Vector3d & c, 
+                                     Eigen::Vector3d & d, Eigen::Vector3d & e, Eigen::Vector3d & f, 
+                                     Eigen::Vector3d & g, Eigen::Vector3d & h, Eigen::Vector3d & i, Eigen::Vector3d & j);
+
     
 void nacrtaj_ose();
 int main (int argc, char * argv[]){
@@ -258,29 +263,23 @@ MatrixXd izracunavanje() {
     y_15 << 1257, 1165, 1;
     y_13 << 1077, 269, 1;
     
-    x_5 = (((x_4.cross(x_8)).cross(x_6.cross(x_2))).cross(x_1)).cross(((x_1.cross(x_4)).cross(x_3.cross(x_2))).cross(x_8)) ;    
-    y_5 = (((y_3.cross(y_8)).cross(y_6.cross(y_2))).cross(y_1)).cross(((y_1.cross(y_4)).cross(y_3.cross(y_2))).cross(y_8)) ;
-   
-    x_5 << x_5(0) / x_5(2), x_5(1) / x_5(2), x_5(2) / x_5(2);
-    y_5 << y_5(0) / y_5(2), y_5(1) / y_5(2), y_5(2) / y_5(2);
-    
-    x_5 = x_5.array().round();
-    y_5 = y_5.array().round();
-    // std::cout << "X5 :" << x_5 <<"\n";
+    x_5 = nevidljive_proizvod ( x_4, x_8, x_6, x_2, x_1,
+                                x_1, x_4, x_3, x_2, x_8 );
      
-    x_13 = (((x_9.cross(x_10)).cross(x_11.cross(x_12))).cross(x_14)).cross(((x_11.cross(x_15)).cross(x_10.cross(x_14))).cross(x_9)) ;
- 
-    x_13 << x_13(0) / x_13(2), x_13(1) / x_13(2), x_13(2) / x_13(2);
-    x_13 = x_13.array().round();
+    y_5 = nevidljive_proizvod ( y_4, y_8, y_6, y_2, y_1, 
+                                y_1, y_4, y_3, y_2, y_8 );
     
-    x_16 = (((x_10.cross(x_14)).cross(x_11.cross(x_15))).cross(x_12)).cross(((x_9.cross(x_10)).cross(x_11.cross(x_12))).cross(x_15)) ;
-    y_16 = (((y_10.cross(y_14)).cross(y_11.cross(y_15))).cross(y_12)).cross(((y_9.cross(y_10)).cross(y_11.cross(y_12))).cross(y_15)) ;
- 
-    x_16 << x_16(0) / x_16(2), x_16(1) / x_16(2), x_16(2) / x_16(2);
-    y_16 << y_16(0) / y_16(2), y_16(1) / y_16(2), y_16(2) / y_16(2);
+    // std::cout << "X5 :" << x_5 <<"\n";
     
-    x_16 = x_16.array().round();
-    y_16 = y_16.array().round();
+    x_13 = nevidljive_proizvod(  x_9, x_10, x_11, x_12, x_14,
+                                x_11, x_15, x_10, x_14,  x_9 );
+    
+    
+    x_16 = nevidljive_proizvod( x_10, x_14, x_11, x_15, x_12,
+                                 x_9, x_10, x_11, x_12, x_15 );
+    
+    y_16 = nevidljive_proizvod( y_10, y_14, y_11, y_15, y_12, 
+                                 y_9, y_10, y_11, y_12, y_15 );
     
     //potreban nam je dalje rad sa matricama: 
     MatrixXd x5(1, 3), x6(1, 3), x7(1, 3), x8(1, 3), x13(1, 3), x14(1, 3), x15(1, 3), x16(1, 3);
@@ -483,4 +482,13 @@ void nacrtaj_veliku( MatrixXd &rekonstruisane_400) {
         glEnd();
         
     }    
+}
+Eigen::Vector3d nevidljive_proizvod( Eigen::Vector3d & a, Eigen::Vector3d & b, Eigen::Vector3d & c, 
+                                     Eigen::Vector3d & d, Eigen::Vector3d & e, Eigen::Vector3d & f, 
+                                     Eigen::Vector3d & g, Eigen::Vector3d & h, Eigen::Vector3d & i, Eigen::Vector3d & j) {
+    Eigen::Vector3d rezultat =  (((a.cross(b)).cross(c.cross(d))).cross(e)).cross(((f.cross(g)).cross(h.cross(i))).cross(j)) ;
+   
+    rezultat << rezultat(0) / rezultat(2), rezultat(1) / rezultat(2), rezultat(2) / rezultat(2);
+    
+    return rezultat.array().round();
 }
