@@ -3,33 +3,106 @@
 #include <iomanip>
 #include <Eigen/Dense>
 #include <Eigen/Jacobi>
+#include <GL/glut.h>
+#include <cmath>
 
 using Eigen::MatrixXd;
 using Eigen::MatrixXf;
 
+
+static int window_width, window_height, i = 0 ;
+
+static void on_keyboard(unsigned char key, int x, int y);
+static void on_reshape(int width, int height);
+static void  on_display(void);
+
+MatrixXd rekonstruisane_400(16, 3);
+        
+MatrixXd izracunavanje();
 MatrixXd uAfine(MatrixXd &xx);
-
 MatrixXd triD(MatrixXd &xx, MatrixXd &yy, MatrixXd &t1, MatrixXd &t2);
-
-int main (){
- 
-    MatrixXd x1(1, 3),
-             x2(1, 3),
-             x3(1, 3),
-             x4(1, 3),
-             x9(1, 3),
-             x10(1, 3),
-             x11(1, 3),
-             x12(1, 3);
+void nacrtaj_malu( MatrixXd &rekonstruisane_400);
+void nacrtaj_veliku( MatrixXd &rekonstruisane_400);
     
-    MatrixXd y1(1, 3),
-             y2(1, 3),
-             y3(1, 3),
-             y4(1, 3),
-             y9(1, 3),
-             y10(1, 3),
-             y11(1, 3),
-             y12(1, 3);
+void nacrtaj_ose();
+int main (int argc, char * argv[]){
+    
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(1000, 1000);
+    glutCreateWindow("3D - rekonstrukcija: ");
+	glClearColor(1, 1, 1, 1);
+    
+    glutKeyboardFunc(on_keyboard);
+    glutReshapeFunc(on_reshape);
+    glutDisplayFunc(on_display);
+
+      
+    glutMainLoop();
+ 
+    
+
+    return 0;
+}
+
+
+static void on_keyboard(unsigned char key, int x, int y){
+    switch (key) {
+        case 27:
+            /* Zavrsava se program. */
+            exit(0);
+            break;
+    }
+}
+
+static void on_reshape(int width, int height) {
+  
+    /* Pamte se sirina i visina prozora. */
+    window_width = width;
+    window_height = height;
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective( 40,
+                    window_width/(float)window_height, 1, 500);
+
+    
+}
+
+static void on_display(void) {
+     /* Brise se prethodni sadrzaj prozora. */
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    
+    /* Podesava se tacka pogleda. */
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+
+    gluLookAt(50, 75, 25,
+               0,  0,  0,
+               0,  0,  1
+             );
+
+    //nacrtaj_ose();
+    
+    if( i == 0 ){
+        rekonstruisane_400 << izracunavanje()*0.05;
+        std::cout << "Rekonstruisane400 : \n" << rekonstruisane_400 << std::endl; 
+        i++;
+    }
+    glPushMatrix();
+        nacrtaj_malu(rekonstruisane_400);
+        nacrtaj_veliku(rekonstruisane_400);
+    glPopMatrix();
+    glutSwapBuffers();
+}
+
+
+
+MatrixXd izracunavanje() {
+
+    MatrixXd x1(1, 3), x2(1, 3), x3(1, 3), x4(1, 3), x9(1, 3), x10(1, 3), x11(1, 3), x12(1, 3);
+    MatrixXd y1(1, 3), y2(1, 3), y3(1, 3), y4(1, 3), y9(1, 3), y10(1, 3), y11(1, 3), y12(1, 3);
   
     // osam tacaka za fundamentalnu matricu F = FF
 
@@ -93,7 +166,7 @@ int main (){
             
     //std::cout<< p << std::endl;
    
-   // pravimo matricu ff :
+   // pravimo matricu ff 3x3 :
     MatrixXd ff(3, 3);
     ff << p(0), p(1), p(2),
           p(3), p(4), p(5),
@@ -174,7 +247,7 @@ int main (){
     y_12 << y12(0), y12(1),y12(2);
 
     x_6 << 1094, 536, 1;
-    y_6 << 98, 535, 1;
+    y_6 << 980, 535, 1;
     x_7 << 862, 729, 1;
     y_7 << 652, 638, 1;
     x_8 << 710, 648, 1;
@@ -186,29 +259,27 @@ int main (){
     y_13 << 1077, 269, 1;
     
     x_5 = (((x_4.cross(x_8)).cross(x_6.cross(x_2))).cross(x_1)).cross(((x_1.cross(x_4)).cross(x_3.cross(x_2))).cross(x_8)) ;    
+    y_5 = (((y_3.cross(y_8)).cross(y_6.cross(y_2))).cross(y_1)).cross(((y_1.cross(y_4)).cross(y_3.cross(y_2))).cross(y_8)) ;
+   
     x_5 << x_5(0) / x_5(2), x_5(1) / x_5(2), x_5(2) / x_5(2);
+    y_5 << y_5(0) / y_5(2), y_5(1) / y_5(2), y_5(2) / y_5(2);
+    
     x_5 = x_5.array().round();
-    
-    //std::cout<< x_5 <<"\n";
-    
+    y_5 = y_5.array().round();
+    // std::cout << "X5 :" << x_5 <<"\n";
+     
     x_13 = (((x_9.cross(x_10)).cross(x_11.cross(x_12))).cross(x_14)).cross(((x_11.cross(x_15)).cross(x_10.cross(x_14))).cross(x_9)) ;
  
     x_13 << x_13(0) / x_13(2), x_13(1) / x_13(2), x_13(2) / x_13(2);
     x_13 = x_13.array().round();
     
     x_16 = (((x_10.cross(x_14)).cross(x_11.cross(x_15))).cross(x_12)).cross(((x_9.cross(x_10)).cross(x_11.cross(x_12))).cross(x_15)) ;
- 
-    x_16 << x_16(0) / x_16(2), x_16(1) / x_16(2), x_16(2) / x_16(2);
-    x_16 = x_16.array().round();
-    
-    y_5 = (((y_4.cross(y_8)).cross(y_6.cross(y_2))).cross(y_1)).cross(((y_1.cross(y_4)).cross(y_3.cross(y_2))).cross(y_8)) ;
-
-    y_5 << y_5(0) / y_5(2), y_5(1) / y_5(2), y_5(2) / y_5(2);
-    y_5 = y_5.array().round();
-     
     y_16 = (((y_10.cross(y_14)).cross(y_11.cross(y_15))).cross(y_12)).cross(((y_9.cross(y_10)).cross(y_11.cross(y_12))).cross(y_15)) ;
  
+    x_16 << x_16(0) / x_16(2), x_16(1) / x_16(2), x_16(2) / x_16(2);
     y_16 << y_16(0) / y_16(2), y_16(1) / y_16(2), y_16(2) / y_16(2);
+    
+    x_16 = x_16.array().round();
     y_16 = y_16.array().round();
     
     //potreban nam je dalje rad sa matricama: 
@@ -236,7 +307,7 @@ int main (){
     
     
     /* TRIANGULACIJA:  */
-    MatrixXd m = MatrixXd::Identity(3,3);
+    MatrixXd m = MatrixXd::Identity(3, 3);
     MatrixXd t1 (3, 4);
     t1 << m.row(0), 0,
           m.row(1), 0,
@@ -254,10 +325,8 @@ int main (){
           E_2.row(1), e2(1),
           E_2.row(2), e2(2);  
       
-           
     //std::cout << t2<<"\n";
     
-
     /* za svaku tacku dobijamo sistem od 4 jednacine sa 4 homogene nepoznate:
     jednacine[x1, y1] = x1(2)*t1(3) -  x1(3)*t1(2), 
                        -x1(1)*t1(3) +  x1(3)*t1(1),
@@ -277,18 +346,25 @@ int main (){
         druga_pom << slika2. row(i);
         jednacine.row(i) << triD (prva_pom, druga_pom, t1, t2);
     }
+    
     // prebacujemo koordinate u afine :
-    MatrixXd jedn_afine(16, 3), pom(1, 4);
+    MatrixXd rekonstruisane(16, 3), pom(1, 4);
     for (int i = 0; i < 16; i++){
         pom << jednacine.row(i);
-        jedn_afine.row(i) << uAfine(pom); 
+        rekonstruisane.row(i) << uAfine(pom); 
     }
     
-    
-    
-    std::cout << jedn_afine << "\n" ;
+    //std::cout << rekonstruisane << "\n" ;
+    //mnozimo sa nekom stotinom (npr. 400 ) poslednju koordinatu, zato sto je jako mala u odnosu na ostale: 
 
-    return 0;
+    MatrixXd rekonstruisane400(16, 3);
+    
+    rekonstruisane400 << rekonstruisane.col(0),rekonstruisane.col(1), rekonstruisane.col(2)*400;
+    
+    //std::cout << "Rekonstruisane400 :\n" << rekonstruisane400 << "\n" << std::endl ;
+ 
+    return rekonstruisane400;
+
 }
 
 MatrixXd uAfine(MatrixXd &xx) {
@@ -323,3 +399,88 @@ MatrixXd triD(MatrixXd &xx, MatrixXd &yy, MatrixXd &t1, MatrixXd &t2) {
      return jedn;
 }
     
+void nacrtaj_ose(){
+    
+  glBegin(GL_LINES);
+    glColor3f(1,0,0);
+    glVertex3f(0, 0, 0);
+    glVertex3f(17, 0, 0);
+
+  glEnd();
+    
+  glBegin(GL_LINES);
+  
+    glColor3f(0,1,0);
+    glVertex3f(0,0,0);
+    glVertex3f(0,17,0);
+    
+  glEnd();
+    
+  glBegin(GL_LINES);
+  
+    glColor3f(0,0,1);
+    glVertex3f(0,0,0);
+    glVertex3f(0,0,17);
+    
+  glEnd();
+      
+}
+
+/*mala kutija */                 
+void nacrtaj_malu( MatrixXd &rekonstruisane_400) {
+    
+    MatrixXd malaIvice (12, 2);
+    malaIvice << 0, 1,
+                 1, 2,
+                 2, 3,
+                 3, 0,
+                 4, 5,
+                 5, 6,
+                 6, 7,
+                 7, 4,
+                 0, 4,
+                 1, 5,
+                 2, 6,
+                 3, 7 ;
+    float x, y;
+    for ( int i = 0 ; i < 12 ; i++ ) {
+        x = malaIvice(i, 0);
+        y = malaIvice(i, 1);
+        glBegin(GL_LINES);
+            glColor3f(0, 0.4, 0.4);
+            glVertex3f(rekonstruisane_400(x, 0),rekonstruisane_400(x, 1), rekonstruisane_400(x, 2) );
+            glVertex3f(rekonstruisane_400(y, 0),rekonstruisane_400(y, 1), rekonstruisane_400(y, 2));
+        glEnd();
+        
+    }    
+}
+
+/*velika kutija */                 
+void nacrtaj_veliku( MatrixXd &rekonstruisane_400) {
+    
+    MatrixXd velikaIvice (12, 2);
+    velikaIvice <<  8, 9,
+                  9, 10,
+                 10, 11,
+                 11, 8,
+                 12, 13,
+                 13, 14,
+                 14, 15,
+                 15, 12,
+                  8, 12,
+                  9, 13,
+                 10, 14,
+                 11, 15;
+    
+    float x, y;
+    for ( int i = 0 ; i < 12 ; i++ ) {
+        x = velikaIvice(i, 0);
+        y = velikaIvice(i, 1);
+        glBegin(GL_LINES);
+            glColor3f(1, 0.4, 0.4);
+            glVertex3f(rekonstruisane_400(x, 0),rekonstruisane_400(x, 1), rekonstruisane_400(x, 2) );
+            glVertex3f(rekonstruisane_400(y, 0),rekonstruisane_400(y, 1), rekonstruisane_400(y, 2));
+        glEnd();
+        
+    }    
+}
